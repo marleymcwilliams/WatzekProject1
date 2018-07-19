@@ -1,0 +1,28 @@
+<html>
+<body>
+
+  <p><b>Information:</b></p>
+
+  <div class="alert alert-danger alert-dismissible fade show" role="alert" style="display:none;" id="failure">
+    <strong>Invalid ISBN.</strong> The requested ISBN does not exist.
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+<script>
+  function displayResult(x) {
+    document.getElementById("p").value = "";
+    document.getElementById("p").innerHTML = x;
+  }
+
+  displayResult(Title);
+  displayResult(Author);
+  displayResult(oclc);
+  displayResult(isbn);
+  displayResult(link);
+
+</script>
+
+</body>
+</html>
