@@ -1,11 +1,12 @@
 // This file is required by the index.html file and will
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
+
 $(document).ready(function() { //Sets max length to 13 (max ISBN length)
     $('#input').attr('maxlength','13');
 });
 
-function clearMetadata() {
+function clearMetadata() { //Clears Metadata
   $(".metadata").html("");
 }
 
@@ -25,7 +26,7 @@ $.fn.press = function() { //Submit function
   }
 };
 
-$("#subbutton").click(function() { //Function for clicking "Submit"
+$("#subbutton").click(function() { //Clicking "Sub" button counts as submit
   $("#subtutton").press();
 });
 
@@ -81,7 +82,7 @@ function apcallisbn(isbn){ //All the crap submit does for an ISBN input
   });
 }
 
-function apcalloclc(oclc){
+function apcalloclc(oclc){ //All the crap submit does for an OCLC input
   var request = require('request');
   var url = 'http://www.worldcat.org/webservices/catalog/content/' + oclc;
   var queryParams = '?servicelevel=full&' +  encodeURIComponent('wskey') + '=' + encodeURIComponent('uwpGfFREPIyE38NK4wmJATF53xA1E2qMbIM2ksm1ZPfxtXGVWEccdDb8qb1oqjF2rC85WWC4mQpMahuZ');
@@ -107,19 +108,23 @@ function apcalloclc(oclc){
                 if(fields[i].$.tag == "020"){
                   var isbn = fields[i].subfield[0]._
                   if(isbn.length == 13){
-                    $("#isbbn").html("<b>ISBN: </b>" + isbn);
+                    //$("#isbbn").html("<b>ISBN: </b>" + isbn);
+                    apcallisbn(isbn);
                   }
                 }
-                if(fields[i].$.tag == 100){
+                /*
+              //  if(fields[i].$.tag == 100){
                   var Author = fields[i].subfield[0]._
-                  $("#Author").html("<b>Author: </b>" + Author);
-                }
+                  $("#Author").html("<b>Author: </b>" + Author); }
+
                 if(fields[i].$.tag == 245){
                   var Title = fields[i].subfield[0]._
-                  $("#Title").html("<b>Title: </b>" + Title);
-                }
+                  $("#Title").html("<b>Title: </b>" + Title); }
+
                 $("#oclc").html("<b>OCLC: </b>" + oclc);
-                
+
+                $("#link").html("<b>Additional Information: </b>" + 'http://worldcat.org/oclc/' + oclc);
+                */
             }
           }
       });

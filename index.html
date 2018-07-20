@@ -20,7 +20,6 @@
 
   <body>
 
-    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
       <div class="container">
         <a class="navbar-brand" href="#">
@@ -50,15 +49,14 @@
       </div>
     </nav><!-- Nav bar -->
 
-    <!-- Page Content -->
     <div class="container"> <!-- Big scary header -->
       <div class="container">
         <h1 class="mt-1">.</h1>
         <h1 class="mt-5">Get book information from ISBN/OCLC.</h1>
       </div>
     </div>
-    <!-- /.container -->
-  <div class="container">
+
+  <div class="container"> <!-- Most of the body -->
     <p></p>
     <div class="form-group">
       <div class="btn-group btn-group-toggle" data-toggle="buttons">
@@ -80,29 +78,25 @@
 </div>
   <div id="amazon"></div>
 
+
 <div id="Title" class="metadata"></div>
 <div id="Author" class="metadata"></div>
 <div id="oclc" class="metadata"></div>
 <div id="isbbn" class="metadata"></div>
 <div id="link" class="metadata"></div>
 
-    <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+  <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
 
-    <!-- Bootstrap core JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
    <script src="node_modules/jquery/dist/jquery.min.js" crossorigin="anonymous"></script>
    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-  <script>
-      // You can also require other files to run in this process
+   <script>
       require('./renderer.js')
-    </script>
+   </script>
 
-    <script>
-    if (window.module) module = window.module;
-
-
-    </script>
+   <script>
+     if (window.module) module = window.module;
+  </script>
 
   </body>
 
