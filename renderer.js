@@ -1,38 +1,43 @@
 // This file is required by the index.html file and will
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
-$(document).ready(function()
-{
-    $('#isbn').attr('maxlength','13');
+$(document).ready(function() { //Sets max length to 13 (max ISBN length)
+    $('#input').attr('maxlength','13');
 });
 
-function clearMetadata(){
+function clearMetadata() {
   $(".metadata").html("");
 }
 
-$.fn.press = function(){
+$.fn.press = function() { //Submit function
   clearMetadata();
-  var isbn = $('#isbn').val().replace(/\s/g, '');
-  apcall(isbn);
-  console.log(isbn);
-  $("#amazon").load("templates/amazon.html");
-  $('#isbn').val('');
+  if($('#isbnmode').is(':checked')) {
+    var isbn = $('#input').val().replace(/\s/g, '');
+    apcallisbn(isbn);
+    $("#amazon").load("templates/amazon.html");
+    $('#input').select();
+  }
+  if($('#oclcmode').is(':checked')) {
+    var oclc = $('#input').val().replace(/\s/g, '');
+    apcalloclc(oclc);
+    $("#amazon").load("templates/amazon.html");
+    $('#input').select();
+  }
 };
 
-$("#subbutton").click(function() {
+$("#subbutton").click(function() { //Function for clicking "Submit"
   $("#subtutton").press();
 });
 
-$(document).keypress(function(e) {
+$(document).keypress(function(e) { //Pressing "enter" key counts as submit
     if(e.which == 13) {
-      if ($('#isbn').is(':focus')) {
+      if ($('#input').is(':focus')) {
         $("#subtutton").press();
       }
     }
 });
 
-
-function apcall(isbn){
+function apcallisbn(isbn){ //All the crap submit does for an ISBN input
 
   var request = require('request');
   var url = 'http://www.worldcat.org/webservices/catalog/search/worldcat/opensearch?q=' + isbn;
@@ -51,11 +56,7 @@ function apcall(isbn){
 
         if(result==undefined || !result.feed.hasOwnProperty('entry')){ //If it screws up
           console.log("fail");
-          $("#failure").css("display", "inline");
-/*        }elseif(arguments['0'].includes('Cannot read property')){
-          window.console.error.apply(window.console, arguments)
-          $("#failure").css("display", "inline");
-*/
+          $("#failureISBN").css("display", "inline");
         }else{
           fields = result.feed.entry[result.feed.entry.length - 1]
 
@@ -75,8 +76,52 @@ function apcall(isbn){
           link = fields.link[0].$.href //Get a link to worldcat (for additional info)
             $("#link").html("<b>Additional Information: </b>" + link);
 
-      }
+          }
       });
   });
+}
 
+function apcalloclc(oclc){
+  var request = require('request');
+  var url = 'http://www.worldcat.org/webservices/catalog/content/' + oclc;
+  var queryParams = '?servicelevel=full&' +  encodeURIComponent('wskey') + '=' + encodeURIComponent('uwpGfFREPIyE38NK4wmJATF53xA1E2qMbIM2ksm1ZPfxtXGVWEccdDb8qb1oqjF2rC85WWC4mQpMahuZ');
+
+  request({
+      url: url + queryParams,
+      method: 'GET'
+  },
+  function (error, response, body) {
+      console.log(body);
+
+      var parseString = require('xml2js').parseString;
+      parseString(body, function (err, result) {
+          console.dir(result);
+
+          if(result==undefined || !result.record.hasOwnProperty('datafield')){ //If it screws up
+            console.log("fail");
+            $("#failureOCLC").css("display", "inline");
+          }else{
+            fields = result.record.datafield
+
+            for (i = 0; i < fields.length; ++i) {
+                if(fields[i].$.tag == "020"){
+                  var isbn = fields[i].subfield[0]._
+                  if(isbn.length == 13){
+                    $("#isbbn").html("<b>ISBN: </b>" + isbn);
+                  }
+                }
+                if(fields[i].$.tag == 100){
+                  var Author = fields[i].subfield[0]._
+                  $("#Author").html("<b>Author: </b>" + Author);
+                }
+                if(fields[i].$.tag == 245){
+                  var Title = fields[i].subfield[0]._
+                  $("#Title").html("<b>Title: </b>" + Title);
+                }
+                $("#oclc").html("<b>OCLC: </b>" + oclc);
+                
+            }
+          }
+      });
+  });
 }
