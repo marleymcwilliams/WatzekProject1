@@ -2,8 +2,11 @@
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
 
-$(document).ready(function() { //Sets max length to 13 (max ISBN length)
-    $('#input').attr('maxlength','13');
+$(document).ready(function() { //Sets max length to 13, 8
+  if($('#isbnmode').is(':checked')) {
+    $('#input').attr('maxlength','13'); }
+  if($('#oclcmode').is(':checked')) {
+    $('#input').attr('maxlength','10'); }
 });
 
 function clearMetadata() { //Clears Metadata
@@ -16,14 +19,12 @@ $.fn.press = function() { //Submit function
     var isbn = $('#input').val().replace(/\s/g, '');
     apcallisbn(isbn);
     $("#amazon").load("templates/amazon.html");
-    $('#input').select();
-  }
+    $('#input').select(); }
   if($('#oclcmode').is(':checked')) {
     var oclc = $('#input').val().replace(/\s/g, '');
     apcalloclc(oclc);
     $("#amazon").load("templates/amazon.html");
-    $('#input').select();
-  }
+    $('#input').select(); }
 };
 
 $("#subbutton").click(function() { //Clicking "Sub" button counts as submit
@@ -49,22 +50,26 @@ function apcallisbn(isbn){ //All the crap submit does for an ISBN input
       method: 'GET'
   },
   function (error, response, body) {
-      console.log(body);
+      //console.log(body);
 
       var parseString = require('xml2js').parseString;
       parseString(body, function (err, result) {
           console.dir(result);  //Object > feed: > entry: Array(#) > blah
 
         if(result==undefined || !result.feed.hasOwnProperty('entry')){ //If it screws up
-          console.log("fail");
           $("#failureISBN").css("display", "inline");
         }else{
           fields = result.feed.entry[result.feed.entry.length - 1]
 
             //look up js 'has property' function
 
-          Title = fields.title[0] //Get the title
+          Title = result.feed.entry[0].title[0] //Get the title
             $("#Title").html("<b>Title: </b>" + Title);
+
+          Title2 = fields.title[0]
+          if(Title != Title2){
+            $("#Title2").html("<b>Second Title: </b>" + Title2);
+          }
 
           Author = fields.author[0].name[0] //Get the Author
             $("#Author").html("<b>Author: </b>" + Author);
@@ -99,7 +104,6 @@ function apcalloclc(oclc){ //All the crap submit does for an OCLC input
           console.dir(result);
 
           if(result==undefined || !result.record.hasOwnProperty('datafield')){ //If it screws up
-            console.log("fail");
             $("#failureOCLC").css("display", "inline");
           }else{
             fields = result.record.datafield
