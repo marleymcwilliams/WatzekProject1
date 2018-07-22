@@ -9,20 +9,21 @@ $(document).ready(function() { //Sets max length to 13, 8
     $('#input').attr('maxlength','10'); }
 });
 
-function clearMetadata() { //Clears Metadata
-  $(".metadata").html("");
-}
-
 $.fn.press = function() { //Submit function
-  clearMetadata();
+
+  $(".metadata").html("");
+
   if($('#isbnmode').is(':checked')) {
     var isbn = $('#input').val().replace(/\s/g, '');
-    apcall1isbn(isbn);
+    check = false
+    apcallisbn(isbn, check);
     $("#amazon").load("templates/amazon.html");
     $('#input').select(); }
+
   if($('#oclcmode').is(':checked')) {
     var oclc = $('#input').val().replace(/\s/g, '');
-    apcalloclc(oclc);
+    check = true
+    apcalloclc(oclc, check);
     $("#amazon").load("templates/amazon.html");
     $('#input').select(); }
 };
@@ -39,35 +40,7 @@ $(document).keypress(function(e) { //Pressing "enter" key counts as submit
     }
 });
 
-function apcall1isbn(isbn){ //Initial ISBN input just to get OCLC number
-
-  var request = require('request');
-  var url = 'http://www.worldcat.org/webservices/catalog/search/worldcat/opensearch?q=' + isbn;
-  var queryParams = '&' +  encodeURIComponent('wskey') + '=' + encodeURIComponent('uwpGfFREPIyE38NK4wmJATF53xA1E2qMbIM2ksm1ZPfxtXGVWEccdDb8qb1oqjF2rC85WWC4mQpMahuZ');
-
-  request({
-      url: url + queryParams,
-      method: 'GET'
-  },
-  function (error, response, body) {
-
-      var parseString = require('xml2js').parseString;
-      parseString(body, function (err, result) {
-
-        if(result==undefined || !result.feed.hasOwnProperty('entry')){ //If it screws up
-          $("#failureISBN").css("display", "inline");
-        }else{
-          fields = result.feed.entry[result.feed.entry.length - 1]
-
-          oclc = fields['oclcterms:recordIdentifier'][0] //Get the OCLC Number
-            $("#oclc").html("<b>OCLC: </b>" + oclc);
-            apcalloclc(oclc);
-          }
-      });
-  });
-}
-
-function apcalloclc(oclc){ //All the crap submit does for an OCLC input
+function apcalloclc(oclc, check){ //All the crap submit does for an OCLC input
   var request = require('request');
   var url = 'http://www.worldcat.org/webservices/catalog/content/' + oclc;
   var queryParams = '?servicelevel=full&' +  encodeURIComponent('wskey') + '=' + encodeURIComponent('uwpGfFREPIyE38NK4wmJATF53xA1E2qMbIM2ksm1ZPfxtXGVWEccdDb8qb1oqjF2rC85WWC4mQpMahuZ');
@@ -89,79 +62,76 @@ function apcalloclc(oclc){ //All the crap submit does for an OCLC input
             fields = result.record.datafield
 
             for (i = 0; i < fields.length; ++i) {
-                if(fields[i].$.tag == "020"){
+
+                if(fields[i].$.tag == 20){ //tag 20 encodes isbn number
                   var isbn = fields[i].subfield[0]._
-                  if(isbn.length == 13){
-                    //$("#isbbn").html("<b>ISBN: </b>" + isbn);
-                    apcall2isbn(isbn);
-                  }
-                }
+                  if(isbn.length == 13 && check == true){
+                    apcallisbn(isbn, check); }
 
-                if(fields[i].$.tag == 100){
-                  var Author = fields[i].subfield[0]._
-                  $("#Author").html("<b>Author: </b>" + Author); }
-
-                if(fields[i].$.tag == 245){
-                  var Title = fields[i].subfield[0]._
-                  $("#Title").html("<b>Title: </b>" + Title); }
-
-                $("#oclc").html("<b>OCLC: </b>" + oclc);
-
-                $("#link").html("<b>Additional Information: </b>" + 'http://worldcat.org/oclc/' + oclc);
-
-                if(fields[i].$.tag == 20){
-                  if(fields[i].subfield.length > 1){
+                  if(fields[i].subfield.length > 1){ //tag 20 also has a chance of encoding material type
                     var Material = fields[i].subfield[1]._
                     $("#Material").html("<b>Material Type: </b>" + Material); } }
 
 
-                if(fields[i].$.tag == 264){
-                  if(fields[i].$.ind2 == 1){
-                    var PubPlace = fields[i].subfield[0]._
-                    $("#PubPlace").html("<b>Publication Location: </b>" + PubPlace);
+                if(fields[i].$.tag == 100){ //tag 100 encodes author
+                  var Author = fields[i].subfield[0]._
+                  $("#Author").html("<b>Author: </b>" + Author); }
 
-                    var Pub = fields[i].subfield[1]._
-                    $("#Pub").html("<b>Publisher: </b>" + Pub);
-
-                    var PubYear = fields[i].subfield[2]._
-                    $("#PubYear").html("<b>Publication Year: </b>" + PubYear); } }
+                if(fields[i].$.tag == 245){ //tag 245 encodes title
+                  var Title = fields[i].subfield[0]._
+                  $("#Title").html("<b>Title: </b>" + Title); }
 
 
-                if(fields[i].$.tag == 260){
-                    var PubPlace = fields[i].subfield[0]._
-                    $("#PubPlace").html("<b>Publication Location: </b>" + PubPlace);
+                  $("#oclc").html("<b>OCLC: </b>" + oclc); //sending oclc to amazon.html
 
-                    var Pub = fields[i].subfield[2]._
-                    $("#Pub").html("<b>Publisher: </b>" + Pub);
-
-                    var PubYear = fields[i].subfield[3]._
-                    $("#PubYear").html("<b>Publication Year: </b>" + PubYear); }
+                  $("#link").html("<b>Additional Information: </b>" + 'http://worldcat.org/oclc/' + oclc); //encoding link to worldcat (given oclc)
 
 
-                if(fields[i].$.tag == 776){
-                    if(fields[i].$.ind2 == 8){
-                      var Material = fields[i].subfield[0]._
-                      $("#Material").html("<b>Material Type: </b>" + Material);
+                if(fields[i].$.tag == 260){ //tag 260 encodes Publisher / Publication Location and Time
+                  var PubPlace = fields[i].subfield[0]._
+                  $("#PubPlace").html("<b>Publication Location: </b>" + PubPlace);
 
-                      var Pub = fields[i].subfield[3]._
-                      $("#Pub").html("<b>Publisher: </b>" + Pub); } }
+                  var Pub = fields[i].subfield[2]._
+                  $("#Pub").html("<b>Publisher: </b>" + Pub);
 
-
-                if(fields[i].$.tag == 655){
-                    var Material2 = fields[i].subfield[0]._
-                    $("#Material2").html("<b>Second Material Type: </b>" + Material2); }
+                  var PubYear = fields[i].subfield[3]._
+                  $("#PubYear").html("<b>Publication Year: </b>" + PubYear); }
 
 
-                if(fields[i].$.tag == 588){
-                      var Material = fields[i].subfield[0]._
-                      $("#Material").html("<b>Material Type: </b>" + Material); }
+                if(fields[i].$.tag == 264 && fields[i].$.ind2 == 1){ //tag 264 encodes Publisher / Publication Location and Time
+                  var PubPlace = fields[i].subfield[0]._
+                  $("#PubPlace").html("<b>Publication Location: </b>" + PubPlace);
+
+                  var Pub = fields[i].subfield[1]._
+                  $("#Pub").html("<b>Publisher: </b>" + Pub);
+
+                  var PubYear = fields[i].subfield[2]._
+                  $("#PubYear").html("<b>Publication Year: </b>" + PubYear); }
+
+
+                if(fields[i].$.tag == 776 && fields[i].$.ind2 == 8){ //Tag 776 encodes Material and Publisher
+                  var Material = fields[i].subfield[0]._
+                  $("#Material").html("<b>Material Type: </b>" + Material);
+
+                  var Pub = fields[i].subfield[3]._
+                  $("#Pub").html("<b>Publisher: </b>" + Pub); }
+
+
+                if(fields[i].$.tag == 655){ //Tag 665 has a chance of encoding Material
+                  var Material2 = fields[i].subfield[0]._
+                  $("#Material2").html("<b>Second Material Type: </b>" + Material2); }
+
+
+                if(fields[i].$.tag == 588){ //Tag 588 has a chance of encoding Material
+                  var Material = fields[i].subfield[0]._
+                  $("#Material").html("<b>Material Type: </b>" + Material); }
             }
           }
       });
   });
 }
 
-function apcall2isbn(isbn){ //All the crap submit does for an ISBN input
+function apcallisbn(isbn, check){ //All the crap submit does for an ISBN input
 
   var request = require('request');
   var url = 'http://www.worldcat.org/webservices/catalog/search/worldcat/opensearch?q=' + isbn;
@@ -183,20 +153,28 @@ function apcall2isbn(isbn){ //All the crap submit does for an ISBN input
         }else{
           fields = result.feed.entry[result.feed.entry.length - 1]
 
-            //look up js 'has property' function
+
+          if(check == false){
+            oclc = fields['oclcterms:recordIdentifier'][0] //Get the OCLC Number
+              $("#oclc").html("<b>OCLC: </b>" + oclc);
+              apcalloclc(oclc, check); }
+
 
           Title = result.feed.entry[0].title[0] //Get the title
             $("#Title").html("<b>Title: </b>" + Title);
 
+
+
           Title2 = fields.title[0]
             if(Title != Title2){
-              $("#Title2").html("<b>Second Title: </b>" + Title2);
-            }
+              $("#Title2").html("<b>Second Title: </b>" + Title2); }
+
 
           Author = fields.author[0].name[0] //Get the Author
             $("#Author").html("<b>Author: </b>" + Author);
 
-          $("#isbbn").html("<b>ISBN: </b>" + isbn); //Print out the ISBN
+            $("#isbbn").html("<b>ISBN: </b>" + isbn); //Print out the ISBN
+
 
           link = fields.link[0].$.href //Get a link to worldcat (for additional info)
             $("#link").html("<b>Additional Information: </b>" + link);
